@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #FFF2F2;
+  --color-foreground: #162419;
+  --color-muted: #546657;
+  --color-muted-dark: #D4DDD5;
+  --color-accent: #76C457;
+  --color-accent-dark: #529938;
+  --color-border: #E8DDDD;
+  --color-card: #FFFFFF;
+  --color-card-hover: #F8FAF6;
+
+  --color-coral: #FF6B8B;
+  --color-tangerine: #FF9E2C;
+  --color-cyan: #06B6D4;
+  --color-violet: #8B5CF6;
+  --color-lime: #84CC16;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Smooth scrolling and mobile viewport safeguards */
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #D4DDD5 transparent;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile touch interaction optimization */
+@media (hover: none) and (pointer: coarse) {
+  .liquid-glass:active {
+    transform: scale(0.99);
+  }
+}
+
+/* Custom selection */
+::selection {
+  background-color: var(--color-accent);
+  color: #FFFFFF;
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4DDD5;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* Text reveal animation keyframes */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes lineExpand {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Utility animations */
+.animate-slide-up {
+  animation: slideUp 0.8s var(--ease-smooth) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s var(--ease-smooth) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s var(--ease-smooth) forwards;
+}
+
+.animate-line-expand {
+  animation: lineExpand 1s var(--ease-smooth) forwards;
+  transform-origin: left;
+}
+
+/* Line clamp utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Overflow clip for text reveal */
+.overflow-clip {
+  overflow: clip;
+}
+
+/* Liquid Glass Component Styling */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 12px 36px -6px rgba(118, 196, 87, 0.12),
+    0 4px 16px -2px rgba(22, 36, 25, 0.04),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.95);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.liquid-glass:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 20px 45px -8px rgba(118, 196, 87, 0.2),
+    0 8px 24px -4px rgba(22, 36, 25, 0.07),
+    inset 0 1px 3px 0 rgba(255, 255, 255, 1);
+}
+
+.liquid-glass-subtle {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    0 8px 24px -4px rgba(118, 196, 87, 0.08),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.liquid-glass-subtle:hover {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 14px 32px -6px rgba(118, 196, 87, 0.16),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+
