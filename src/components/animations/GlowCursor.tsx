@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
+import { useEffect, useRef, type HTMLAttributes, type ReactNode } from "react";
 import { Mesh, Program, Renderer, Triangle } from "ogl";
 import "./GlowCursor.css";
 
@@ -191,7 +191,7 @@ export default function GlowCursor({
   idleTimeout = 2500,
   fadeDuration = 600,
   blendMode = "normal",
-  maxDevicePixelRatio = 1.5,
+  maxDevicePixelRatio = 1.0,
   enabled = true,
   children,
   className = "",
@@ -201,9 +201,7 @@ export default function GlowCursor({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const orbRef = useRef<HTMLDivElement>(null);
-  const propsRef = useRef<GlowCursorConfig>({} as GlowCursorConfig);
-
-  propsRef.current = {
+  const propsRef = useRef<GlowCursorConfig>({
     color,
     secondaryColor,
     trailLength,
@@ -223,7 +221,51 @@ export default function GlowCursor({
     maxDevicePixelRatio,
     blendMode,
     enabled,
-  };
+  });
+
+  useEffect(() => {
+    propsRef.current = {
+      color,
+      secondaryColor,
+      trailLength,
+      trailWidth,
+      trailTaper,
+      followSpeed,
+      glowIntensity,
+      glowSpread,
+      hotspot,
+      brightness,
+      opacity,
+      pulseSpeed,
+      noiseStrength,
+      idleFade,
+      idleTimeout,
+      fadeDuration,
+      maxDevicePixelRatio,
+      blendMode,
+      enabled,
+    };
+  }, [
+    color,
+    secondaryColor,
+    trailLength,
+    trailWidth,
+    trailTaper,
+    followSpeed,
+    glowIntensity,
+    glowSpread,
+    hotspot,
+    brightness,
+    opacity,
+    pulseSpeed,
+    noiseStrength,
+    idleFade,
+    idleTimeout,
+    fadeDuration,
+    maxDevicePixelRatio,
+    blendMode,
+    enabled,
+  ]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -287,13 +329,23 @@ export default function GlowCursor({
     let lastInputTime = performance.now();
     let lastFrameTime = performance.now();
     let raf = 0;
+    let rafActive = false;
     let destroyed = false;
+
+    const wakeRender = () => {
+      if (!rafActive && !destroyed) {
+        rafActive = true;
+        lastFrameTime = performance.now();
+        raf = requestAnimationFrame(render);
+      }
+    };
 
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
       renderer.setSize(width, height);
       program.uniforms.uResolution.value = [width, height];
+      wakeRender();
     };
 
     const initializeTrail = (x: number, y: number) => {
@@ -317,6 +369,7 @@ export default function GlowCursor({
       target.y = y;
       pointerInside = true;
       lastInputTime = performance.now();
+      wakeRender();
 
       if (orbRef.current) {
         orbRef.current.style.transform = `translate(${clientX}px, ${clientY}px) translate(-50%, -50%)`;
@@ -337,13 +390,23 @@ export default function GlowCursor({
     const onPointerLeave = () => {
       pointerInside = false;
       lastInputTime = performance.now();
+      wakeRender();
       if (orbRef.current) {
         orbRef.current.style.opacity = "0";
       }
     };
 
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        rafActive = false;
+        cancelAnimationFrame(raf);
+      } else {
+        wakeRender();
+      }
+    };
+
     const render = (now: number) => {
-      if (destroyed) return;
+      if (destroyed || !rafActive) return;
       const config = propsRef.current;
       const delta = Math.min((now - lastFrameTime) / 16.667, 3);
       lastFrameTime = now;
@@ -374,6 +437,15 @@ export default function GlowCursor({
       const fadeTarget = initialized && config.enabled && !shouldFade ? 1 : 0;
       fade += (fadeTarget - fade) * Math.min(1, fadeStep * 7);
 
+      // Idle sleeping: if fade has reached 0 and we are idle, stop rendering
+      if (fadeTarget === 0 && fade < 0.0005) {
+        fade = 0;
+        program.uniforms.uFade.value = 0;
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        rafActive = false;
+        return;
+      }
+
       program.uniforms.uPointCount.value = clamp(Math.round(config.trailLength), 2, MAX_POINTS);
       program.uniforms.uColor.value = hexToRgb(config.color);
       program.uniforms.uSecondaryColor.value = hexToRgb(config.secondaryColor);
@@ -398,17 +470,20 @@ export default function GlowCursor({
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
     window.addEventListener("pointerleave", onPointerLeave, { passive: true });
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     resize();
-    raf = requestAnimationFrame(render);
+    wakeRender();
 
     return () => {
       destroyed = true;
+      rafActive = false;
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("pointerleave", onPointerLeave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       mesh.geometry.remove();
       program.remove();
     };

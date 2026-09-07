@@ -84,8 +84,11 @@ const MaskedHeading: React.FC<MaskedHeadingProps> = ({
     saturation: number;
     grayscale: boolean;
     textScale: number;
-  }>({ fillScale: 1, parallax: 0, drift: 0, brightness: 1, saturation: 1, grayscale: false, textScale: 0.115 });
-  settingsRef.current = { fillScale, parallax, drift, brightness, saturation, grayscale, textScale };
+  }>({ fillScale, parallax, drift, brightness, saturation, grayscale, textScale });
+
+  useEffect(() => {
+    settingsRef.current = { fillScale, parallax, drift, brightness, saturation, grayscale, textScale };
+  }, [fillScale, parallax, drift, brightness, saturation, grayscale, textScale]);
 
   const place = useCallback(() => {
     const root = rootRef.current;
@@ -138,10 +141,44 @@ const MaskedHeading: React.FC<MaskedHeadingProps> = ({
     if (document.fonts?.ready) document.fonts.ready.then(sync).catch(() => {});
 
     let raf = 0;
+    let rafActive = false;
+    let inView = false;
     let last = performance.now();
     let clock = 0;
 
+    const startLoop = () => {
+      if (!rafActive && inView) {
+        rafActive = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    };
+
+    const stopLoop = () => {
+      if (rafActive) {
+        rafActive = false;
+        cancelAnimationFrame(raf);
+      }
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) {
+          startLoop();
+        } else {
+          stopLoop();
+        }
+      },
+      { threshold: 0.05, rootMargin: "100px" }
+    );
+    io.observe(root);
+
     const frame = (now: number) => {
+      if (!inView) {
+        rafActive = false;
+        return;
+      }
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       clock += dt;
@@ -167,6 +204,7 @@ const MaskedHeading: React.FC<MaskedHeadingProps> = ({
       const ny = ((e.clientY - r.top) / (r.height || 1)) * 2 - 1;
       offsetRef.current.tx = clamp(nx, -1, 1) * -s.parallax;
       offsetRef.current.ty = clamp(ny, -1, 1) * -s.parallax;
+      startLoop();
     };
 
     const onLeave = () => {
@@ -176,10 +214,10 @@ const MaskedHeading: React.FC<MaskedHeadingProps> = ({
 
     root.addEventListener("pointermove", onMove);
     root.addEventListener("pointerleave", onLeave);
-    raf = requestAnimationFrame(frame);
 
     return () => {
-      cancelAnimationFrame(raf);
+      stopLoop();
+      io.disconnect();
       ro.disconnect();
       root.removeEventListener("pointermove", onMove);
       root.removeEventListener("pointerleave", onLeave);
@@ -283,11 +321,11 @@ const MaskedHeading: React.FC<MaskedHeadingProps> = ({
     return () => tweenRef.current?.kill();
   }, [reveal, trigger, duration, stagger, words]);
 
-  const Tag = tag as any;
+  const Tag = (tag || "h1") as "h1";
 
   return (
     <Tag
-      ref={rootRef}
+      ref={rootRef as React.Ref<HTMLHeadingElement>}
       className={`masked-heading ${className}`.trim()}
       style={{
         textAlign: align,

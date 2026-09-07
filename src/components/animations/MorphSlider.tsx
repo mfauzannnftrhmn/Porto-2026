@@ -289,6 +289,9 @@ class MorphEngine {
   private textures: Texture[];
   private sizes: [number, number][];
   private resizeObserver: ResizeObserver;
+  private intersectionObserver: IntersectionObserver;
+  private inView = false;
+  private isRunning = false;
   private raf = 0;
   private boundLoop: (t: number) => void;
   private boundContextLost: (e: Event) => void;
@@ -355,13 +358,46 @@ class MorphEngine {
     this.loadTextures();
 
     this.boundLoop = this.loop.bind(this);
+
+    // Viewport-aware rendering loop: only animate when in view
+    this.intersectionObserver = new IntersectionObserver(
+      ([entry]) => {
+        const wasInView = this.inView;
+        this.inView = entry.isIntersecting;
+        if (this.inView) {
+          this.renderOnce();
+          this.startLoop();
+        } else if (wasInView) {
+          this.stopLoop();
+        }
+      },
+      { threshold: 0.05, rootMargin: '100px' }
+    );
+    this.intersectionObserver.observe(container);
+  }
+
+  startLoop(): void {
+    if (this.isRunning || !this.inView) return;
+    this.isRunning = true;
     this.raf = requestAnimationFrame(this.boundLoop);
+  }
+
+  stopLoop(): void {
+    if (!this.isRunning) return;
+    cancelAnimationFrame(this.raf);
+    this.isRunning = false;
+  }
+
+  renderOnce(): void {
+    if (!this.dragging && !this.animating) this.syncOptions();
+    this.renderer.render({ scene: this.mesh });
   }
 
   private loadTextures(): void {
     this.items.forEach((item, index) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      img.decoding = 'async';
       img.src = item.image;
       img.onload = () => {
         const texture = new Texture(this.gl, { generateMipmaps: false });
@@ -371,6 +407,7 @@ class MorphEngine {
         if (index === this.current) {
           this.program.uniforms.tCurrent.value = texture;
           this.program.uniforms.uCurrentSize.value = this.sizes[index];
+          this.renderOnce();
         }
       };
       img.onerror = () => {};
@@ -383,6 +420,7 @@ class MorphEngine {
     const h = Math.max(rect.height, 1);
     this.renderer.setSize(w, h);
     this.program.uniforms.uResolution.value = [this.gl.canvas.width, this.gl.canvas.height];
+    this.renderOnce();
   }
 
   private syncOptions(): void {
@@ -396,6 +434,10 @@ class MorphEngine {
   }
 
   private loop(t: number): void {
+    if (!this.inView) {
+      this.isRunning = false;
+      return;
+    }
     this.program.uniforms.uTime.value = t * 0.001;
     if (!this.dragging && !this.animating) this.syncOptions();
     this.renderer.render({ scene: this.mesh });
@@ -424,6 +466,7 @@ class MorphEngine {
       const raw = this.current + dir;
       if (raw < 0 || raw > this.items.length - 1) return;
     }
+    this.startLoop();
     this.syncOptions();
     const target = this.prepareNext(dir);
     this.animating = true;
@@ -471,6 +514,7 @@ class MorphEngine {
 
   beginDrag(): boolean {
     if (this.animating || this.items.length < 2) return false;
+    this.startLoop();
     this.dragging = true;
     this.dragDir = 0;
     this.syncOptions();
@@ -529,11 +573,12 @@ class MorphEngine {
 
   private onContextLost(e: Event): void {
     e.preventDefault();
-    cancelAnimationFrame(this.raf);
+    this.stopLoop();
   }
 
   destroy(): void {
-    cancelAnimationFrame(this.raf);
+    this.stopLoop();
+    this.intersectionObserver.disconnect();
     if (this.tween) this.tween.kill();
     this.resizeObserver.disconnect();
     this.canvas.removeEventListener('webglcontextlost', this.boundContextLost);
@@ -584,7 +629,10 @@ export default function MorphSlider({
     overlayColor,
     loop
   });
-  optsRef.current = { transition, duration, ease, intensity, scale, aberration, drift, overlayColor, loop };
+
+  useEffect(() => {
+    optsRef.current = { transition, duration, ease, intensity, scale, aberration, drift, overlayColor, loop };
+  }, [transition, duration, ease, intensity, scale, aberration, drift, overlayColor, loop]);
 
   useEffect(() => {
     if (!containerRef.current) return undefined;
@@ -594,7 +642,7 @@ export default function MorphSlider({
       items,
       startIndex,
       reducedMotion,
-      dprCap: 2,
+      dprCap: 1.5,
       getOptions: () => optsRef.current,
       onIndexChange: setIndex
     });
@@ -605,7 +653,6 @@ export default function MorphSlider({
       engine.destroy();
       engineRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, startIndex]);
 
   const handleNext = useCallback(() => engineRef.current?.next(), []);

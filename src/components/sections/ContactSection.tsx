@@ -58,17 +58,17 @@ export default function ContactSection() {
       className="relative py-20 md:py-36 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full overflow-hidden"
     >
       {/* Background colorful ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[160px] pointer-events-none" />
-      <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-[#FF6B8B]/15 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-[#06B6D4]/15 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[160px] pointer-events-none gpu-blur" />
+      <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-[#FF6B8B]/15 rounded-full blur-[150px] pointer-events-none gpu-blur" />
+      <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-[#06B6D4]/15 rounded-full blur-[160px] pointer-events-none gpu-blur" />
 
       <div className="relative z-10 max-w-5xl mx-auto text-center liquid-glass rounded-2xl sm:rounded-[40px] p-5 sm:p-12 md:p-16 overflow-hidden">
         {/* Top Liquid Specular Rim */}
         <div className="absolute top-0 inset-x-12 h-[2px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
 
         {/* Ambient inner card glows */}
-        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 bg-accent/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 right-10 w-72 h-72 bg-[#06B6D4]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 bg-accent/20 rounded-full blur-3xl pointer-events-none gpu-blur" />
+        <div className="absolute -bottom-24 right-10 w-72 h-72 bg-[#06B6D4]/15 rounded-full blur-3xl pointer-events-none gpu-blur" />
 
         <div className="relative z-10">
           {/* Label */}

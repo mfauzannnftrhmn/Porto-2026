@@ -155,6 +155,8 @@ body {
     inset 0 1px 2px 0 rgba(255, 255, 255, 0.95);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .liquid-glass:hover {
@@ -176,6 +178,8 @@ body {
     inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.9);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .liquid-glass-subtle:hover {
@@ -184,5 +188,12 @@ body {
   box-shadow: 
     0 14px 32px -6px rgba(118, 196, 87, 0.16),
     inset 0 1px 2px 0 rgba(255, 255, 255, 1);
+}
+
+/* GPU hardware acceleration for heavy blurs */
+.gpu-blur {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 

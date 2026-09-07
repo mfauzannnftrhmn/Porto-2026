@@ -90,13 +90,13 @@ export default function SplitText({
     );
   }, [inView, duration, ease, delay, from, to, onLetterAnimationComplete]);
 
-  const Tag = tag as any;
+  const Tag = (tag || "p") as "p";
 
   let charIndex = 0;
 
   return (
     <Tag
-      ref={containerRef}
+      ref={containerRef as React.Ref<HTMLParagraphElement>}
       className={`inline-block ${className}`.trim()}
       style={{
         textAlign,

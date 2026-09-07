@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import { easeSmooth } from "@/lib/animations";
@@ -23,13 +24,11 @@ export default function TextReveal({
 }: TextRevealProps) {
   const { ref, isInView } = useInView({ threshold: 0.2 });
 
-  const splitText = () => {
+  const items = useMemo(() => {
     if (splitBy === "chars") return children.split("");
     if (splitBy === "lines") return children.split("\n");
     return children.split(" ");
-  };
-
-  const items = splitText();
+  }, [children, splitBy]);
 
   return (
     <Tag ref={ref as React.Ref<HTMLHeadingElement & HTMLParagraphElement & HTMLSpanElement>} className={className}>

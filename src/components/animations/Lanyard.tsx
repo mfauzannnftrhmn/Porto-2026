@@ -1,7 +1,6 @@
-/* eslint-disable react/no-unknown-property */
 "use client";
 
-import { useEffect, useMemo, useRef, useState, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, Suspense } from "react";
 import { Canvas, extend, useFrame, type ThreeElement, type ThreeEvent } from "@react-three/fiber";
 import { useGLTF, useTexture, Environment, Lightformer } from "@react-three/drei";
 import {
@@ -22,27 +21,27 @@ extend({ MeshLineGeometry, MeshLineMaterial });
 
 declare module "@react-three/fiber" {
   interface ThreeElements {
-    meshLineGeometry: ThreeElement<typeof MeshLineGeometry>;
-    meshLineMaterial: ThreeElement<typeof MeshLineMaterial>;
+    meshLineGeometry: {
+      ref?: React.Ref<unknown>;
+      args?: unknown[];
+      [key: string]: unknown;
+    };
+    meshLineMaterial: {
+      ref?: React.Ref<unknown>;
+      color?: string;
+      depthTest?: boolean;
+      resolution?: [number, number] | THREE.Vector2;
+      useMap?: number;
+      map?: THREE.Texture;
+      repeat?: [number, number];
+      lineWidth?: number;
+      args?: unknown[];
+      [key: string]: unknown;
+    };
   }
 }
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      meshLineGeometry: any;
-      meshLineMaterial: any;
-    }
-  }
-  namespace React {
-    namespace JSX {
-      interface IntrinsicElements {
-        meshLineGeometry: any;
-        meshLineMaterial: any;
-      }
-    }
-  }
-}
+const emptySubscribe = () => () => {};
 
 const BLANK_PIXEL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
@@ -79,30 +78,48 @@ export default function Lanyard({
   anchorPosition = [0, 4.9, 0],
   className = "",
 }: LanyardProps) {
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== "undefined" && window.innerWidth < 768);
-  const [mounted, setMounted] = useState(false);
+  const [isInView, setIsInView] = useState(true);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
     const handleResize = (): void => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    const el = wrapperRef.current;
+    let observer: IntersectionObserver | null = null;
+    if (el) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          setIsInView(entry.isIntersecting);
+        },
+        { rootMargin: "150px" }
+      );
+      observer.observe(el);
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (observer) observer.disconnect();
+    };
   }, []);
 
   if (!mounted) {
     return (
-      <div className={`lanyard-wrapper ${className}`}>
+      <div ref={wrapperRef} className={`lanyard-wrapper ${className}`}>
         <div className="w-12 h-12 rounded-full border-2 border-accent border-t-transparent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className={`lanyard-wrapper ${className}`}>
+    <div ref={wrapperRef} className={`lanyard-wrapper ${className}`}>
       <Canvas
         camera={{ position, fov }}
-        dpr={[1, isMobile ? 1.5 : 2]}
-        gl={{ alpha: transparent }}
+        frameloop={isInView ? "always" : "never"}
+        dpr={[1, isMobile ? 1.25 : 1.5]}
+        gl={{ alpha: transparent, powerPreference: "high-performance" }}
         onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0x000000), transparent ? 0 : 1)}
       >
         <ambientLight intensity={Math.PI} />
@@ -172,6 +189,59 @@ type LanyardRigidBody = RapierRigidBody & {
   lerped?: THREE.Vector3;
 };
 
+let cachedLanyardTexture: THREE.CanvasTexture | null = null;
+
+function getLanyardTexture(): THREE.Texture {
+  if (typeof document === "undefined") return new THREE.Texture();
+  if (cachedLanyardTexture) return cachedLanyardTexture;
+
+  const W = 512;
+  const H = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return new THREE.Texture();
+
+  // Fill with rich portfolio green gradient (#76C457)
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, "#88D768");
+  grad.addColorStop(0.2, "#76C457");
+  grad.addColorStop(0.8, "#6BB84D");
+  grad.addColorStop(1, "#5FA344");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle fabric weave texture
+  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+  for (let x = 0; x < W; x += 4) {
+    ctx.fillRect(x, 0, 2, H);
+  }
+  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+  for (let x = 2; x < W; x += 4) {
+    ctx.fillRect(x, 0, 2, H);
+  }
+
+  // Top & bottom stitching line
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, 6);
+  ctx.lineTo(W, 6);
+  ctx.moveTo(0, H - 6);
+  ctx.lineTo(W, H - 6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(-4, 1);
+  tex.needsUpdate = true;
+  cachedLanyardTexture = tex;
+  return tex;
+}
+
 function Band({
   maxSpeed = 50,
   minSpeed = 0,
@@ -179,7 +249,6 @@ function Band({
   frontImage = "/fauzan-profile.jpg",
   backImage = "/fauzan-profile.jpg",
   imageFit = "cover",
-  lanyardImage = "/lanyard.png",
   lanyardWidth = 1,
   cardGlbUrl = "/card.glb",
   anchorPosition = [0, 4.9, 0],
@@ -211,61 +280,21 @@ function Band({
     return body.lerped;
   };
 
-  const { nodes, materials } = useGLTF(cardGlbUrl) as any;
+  const gltf = useGLTF(cardGlbUrl) as unknown as {
+    nodes: Record<string, THREE.Mesh>;
+    materials: Record<string, THREE.MeshPhysicalMaterial & { base: { map?: THREE.Texture }; metal: THREE.Material }>;
+  };
+  const nodes = gltf.nodes;
+  const materials = gltf.materials;
   const frontTex = useTexture(frontImage || BLANK_PIXEL);
   const backTex = useTexture(backImage || BLANK_PIXEL);
 
   // Dynamic clean green lanyard strap texture (#76C457) without any external logos
-  const texture = useMemo(() => {
-    const W = 512;
-    const H = 64;
-    const canvas = document.createElement("canvas");
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return new THREE.Texture();
-
-    // Fill with rich portfolio green gradient (#76C457)
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, "#88D768");
-    grad.addColorStop(0.2, "#76C457");
-    grad.addColorStop(0.8, "#6BB84D");
-    grad.addColorStop(1, "#5FA344");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    // Subtle fabric weave texture
-    ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-    for (let x = 0; x < W; x += 4) {
-      ctx.fillRect(x, 0, 2, H);
-    }
-    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
-    for (let x = 2; x < W; x += 4) {
-      ctx.fillRect(x, 0, 2, H);
-    }
-
-    // Top & bottom stitching line
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.moveTo(0, 6);
-    ctx.lineTo(W, 6);
-    ctx.moveTo(0, H - 6);
-    ctx.lineTo(W, H - 6);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(-4, 1);
-    tex.needsUpdate = true;
-    return tex;
-  }, []);
+  const texture = getLanyardTexture();
 
   const cardMap = useMemo(() => {
     const baseMap = materials.base.map as THREE.Texture;
-    const baseImg = baseMap.image as any;
+    const baseImg = baseMap.image as (CanvasImageSource & { width?: number; height?: number }) | undefined;
     const W = baseImg?.width || 1024;
     const H = baseImg?.height || 1024;
     const canvas = document.createElement("canvas");
@@ -279,7 +308,7 @@ function Band({
     ctx.fillRect(0, 0, W, H);
 
     // 2. Draw user photo onto front card face (UV area: 0, 0, 0.5, 0.755)
-    const drawFitted = (img: any, rect: typeof FRONT_UV_RECT) => {
+    const drawFitted = (img: CanvasImageSource & { width: number; height: number }, rect: typeof FRONT_UV_RECT) => {
       const rx = rect.x * W;
       const ry = rect.y * H;
       const rw = rect.w * W;
@@ -298,8 +327,8 @@ function Band({
       ctx.restore();
     };
 
-    if (frontImage && frontTex.image) drawFitted(frontTex.image, FRONT_UV_RECT);
-    if (backImage && backTex.image) drawFitted(backTex.image, BACK_UV_RECT);
+    if (frontImage && frontTex.image) drawFitted(frontTex.image as CanvasImageSource & { width: number; height: number }, FRONT_UV_RECT);
+    if (backImage && backTex.image) drawFitted(backTex.image as CanvasImageSource & { width: number; height: number }, BACK_UV_RECT);
 
     const composite = new THREE.CanvasTexture(canvas);
     composite.colorSpace = THREE.SRGBColorSpace;
@@ -309,10 +338,16 @@ function Band({
     return composite;
   }, [frontImage, backImage, imageFit, frontTex, backTex, materials.base.map]);
 
-  const [curve] = useState(
-    () =>
-      new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()])
-  );
+  const [curve] = useState(() => {
+    const c = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+      new THREE.Vector3(),
+    ]);
+    c.curveType = "chordal";
+    return c;
+  });
   const [dragged, drag] = useState<false | THREE.Vector3>(false);
   const [hovered, hover] = useState(false);
 
@@ -361,9 +396,6 @@ function Band({
       card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z }, true);
     }
   });
-
-  curve.curveType = "chordal";
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
 
   return (
     <>

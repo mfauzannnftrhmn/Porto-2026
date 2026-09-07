@@ -159,10 +159,10 @@ export default function HeroSection() {
       </motion.div>
 
       {/* Background colorful ambient glow orbs */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -left-20 w-[420px] h-[420px] bg-[#FF6B8B]/18 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute -top-12 left-1/3 w-[360px] h-[360px] bg-[#06B6D4]/15 rounded-full blur-[150px] pointer-events-none" />
-      <div className="absolute top-2/3 right-1/4 w-[320px] h-[320px] bg-[#FF9E2C]/15 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-accent/20 rounded-full blur-[140px] pointer-events-none gpu-blur" />
+      <div className="absolute bottom-1/4 -left-20 w-[420px] h-[420px] bg-[#FF6B8B]/18 rounded-full blur-[140px] pointer-events-none gpu-blur" />
+      <div className="absolute -top-12 left-1/3 w-[360px] h-[360px] bg-[#06B6D4]/15 rounded-full blur-[150px] pointer-events-none gpu-blur" />
+      <div className="absolute top-2/3 right-1/4 w-[320px] h-[320px] bg-[#FF9E2C]/15 rounded-full blur-[130px] pointer-events-none gpu-blur" />
     </section>
   );
 }

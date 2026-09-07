@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users, Calendar, Award, CheckCircle2 } from "lucide-react";
+import { Calendar, CheckCircle2 } from "lucide-react";
 import { useInView } from "@/hooks/useInView";
 import { easeSmooth } from "@/lib/animations";
 import SectionHeading from "@/components/ui/SectionHeading";

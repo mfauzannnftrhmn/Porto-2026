@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GraduationCap, Award, MapPin } from "lucide-react";
+import { GraduationCap, MapPin } from "lucide-react";
 import { useInView } from "@/hooks/useInView";
 import { easeSmooth } from "@/lib/animations";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -11,7 +11,7 @@ import { aboutBio, stats, personalInfo, educationList } from "@/lib/data";
 export default function AboutSection() {
   const { ref: statsRef, isInView: statsInView } = useInView({ threshold: 0.2 });
   const { ref: imageRef, isInView: imageInView } = useInView({ threshold: 0.2 });
-  const { ref: eduRef, isInView: eduInView } = useInView({ threshold: 0.2 });
+  const { ref: eduRef } = useInView({ threshold: 0.2 });
 
   return (
     <section id="about" className="py-20 md:py-32 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full">
@@ -31,8 +31,8 @@ export default function AboutSection() {
 
           {/* Colorful background ambient glows */}
           <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-[#FF6B8B]/10 pointer-events-none" />
-          <div className="absolute -top-12 -right-12 w-48 h-48 bg-accent/20 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#06B6D4]/15 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-accent/20 rounded-full blur-2xl pointer-events-none gpu-blur" />
+          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#06B6D4]/15 rounded-full blur-2xl pointer-events-none gpu-blur" />
 
           {/* Top badge */}
           <div className="relative z-10 flex items-center justify-between">
@@ -49,6 +49,8 @@ export default function AboutSection() {
                 <img
                   src={personalInfo.photo}
                   alt={personalInfo.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-28 h-38 sm:w-36 sm:h-48 md:w-40 md:h-52 object-cover object-top rounded-xl shadow-inner bg-white"
                 />
               </div>
