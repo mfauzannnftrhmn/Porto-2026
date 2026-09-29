@@ -114,9 +114,11 @@ export default function AboutSection() {
                   </div>
                   <p className="text-[11px] sm:text-xs font-semibold text-accent-dark">{edu.degree}</p>
                   <p className="text-[11px] sm:text-xs font-mono text-muted mt-0.5 sm:mt-1">{edu.period}</p>
-                  <div className="mt-2 inline-block px-2 sm:px-2.5 py-0.5 rounded-md bg-accent/15 border border-accent/30 text-[11px] sm:text-xs font-bold text-accent-dark">
-                    {edu.grade}
-                  </div>
+                  {edu.grade && (
+                    <div className="mt-2 inline-block px-2 sm:px-2.5 py-0.5 rounded-md bg-accent/15 border border-accent/30 text-[11px] sm:text-xs font-bold text-accent-dark">
+                      {edu.grade}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

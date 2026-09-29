@@ -51,7 +51,7 @@ export const educationList: Education[] = [
     school: "Universitas Buana Perjuangan Karawang",
     degree: "S1 Teknik Informatika",
     period: "Agustus 2023 — Sekarang",
-    grade: "IPK : 3.88 / 4.00",
+    grade: "",
     location: "Karawang, Indonesia",
     highlights: [
       "Fokus pada Software Engineering, UI/UX Design, dan Front-End Web/Mobile Development.",
@@ -63,7 +63,7 @@ export const educationList: Education[] = [
     school: "SMKN 1 Cikampek",
     degree: "Teknik Instalasi Tenaga Listrik",
     period: "Juli 2020 — Mei 2023",
-    grade: "Nilai Kelulusan: 84.33 / 100",
+    grade: "",
     location: "Karawang, Indonesia",
     highlights: [
       "Certificate Of Competency Assessment: Three Phase Lighting and Power Installation (2023).",
