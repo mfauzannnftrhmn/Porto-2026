@@ -5,7 +5,7 @@ import { Award, Code2, Palette, Database, Sparkles, CheckCircle } from "lucide-r
 import { useInView } from "@/hooks/useInView";
 import { easeSmooth } from "@/lib/animations";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { skillCategories, certifications } from "@/lib/data";
+import { skillCategories } from "@/lib/data";
 
 const categoryIcons = [
   <Code2 key="code" size={20} className="text-[#76C457]" />,
@@ -59,47 +59,7 @@ export default function ServicesSection() {
         ))}
       </div>
 
-      {/* Certifications List */}
-      <div ref={certRef} className="mt-8 sm:mt-12">
-        <h3 className="text-base sm:text-xl md:text-2xl font-serif font-semibold text-foreground mb-4 sm:mb-6 flex items-center gap-2">
-          <Award size={20} className="text-accent" />
-          Sertifikat & Lisensi Resmi
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
-          {certifications.map((cert, idx) => (
-            <motion.div
-              key={cert.title}
-              className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl liquid-glass-subtle hover:scale-[1.02] transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
-              initial={{ opacity: 0, y: 20 }}
-              animate={certInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-              transition={{ duration: 0.6, delay: idx * 0.15, ease: easeSmooth }}
-            >
-              <div className="absolute top-0 inset-x-6 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent pointer-events-none" />
-              <div>
-                <div className="flex items-center justify-between mb-2.5 sm:mb-3">
-                  <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-accent px-2 sm:px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/30">
-                    <CheckCircle size={11} /> Verified
-                  </span>
-                  <span className="text-[11px] sm:text-xs font-mono text-muted">{cert.date}</span>
-                </div>
-
-                <h4 className="font-serif text-base sm:text-lg font-semibold text-foreground leading-snug">
-                  {cert.title}
-                </h4>
-
-                <p className="text-xs font-semibold text-accent-dark mt-0.5 sm:mt-1">
-                  {cert.issuer}
-                </p>
-
-                <p className="text-xs text-muted mt-2.5 sm:mt-3 leading-relaxed">
-                  {cert.details}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      
     </section>
   );
 }

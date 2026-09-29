@@ -415,27 +415,7 @@ export const skillCategories = [
   },
 ];
 
-// ─── Certifications ────────────────────────────────────────────
-export const certifications = [
-  {
-    title: "Certificate Of Competency Assessment",
-    issuer: "Assignment Three Phase Lighting and Power Installation",
-    date: "Maret 2023",
-    details: "Instalasi listrik bangunan, perlengkapan hubung bagi (PHB), dan penerangan jalan umum (PJU).",
-  },
-  {
-    title: "Certificate As Head of YouTube Social Media Division",
-    issuer: "Jurnalistik SMKN 1 Cikampek",
-    date: "2022",
-    details: "Kepemimpinan divisi multimedia, tata kelola channel YouTube, produksi liputan video sekolah.",
-  },
-  {
-    title: "Sertifikat Praktek Kerja Industri (Prakerin)",
-    issuer: "PT. Meiji Rubber Indonesia",
-    date: "April 2022 — Juli 2022",
-    details: "Implementasi standar mutu 5S Jepang (Seiri, Seiton, Seiso, Seiketsu, Shitsuke) & Quality Control.",
-  },
-];
+
 
 // ─── Social Links ──────────────────────────────────────
 export const socialLinks = [
