@@ -285,6 +285,7 @@ export default function GlowCursor({
     }
 
     const gl = renderer.gl;
+    if (!gl) return;
     gl.clearColor(0, 0, 0, 0);
 
     const pointData = Array(MAX_POINTS * 2).fill(0);

@@ -18,8 +18,7 @@ export default function MagneticButton({
   href,
   strength = 0.3,
 }: MagneticButtonProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const rectRef = useRef<DOMRect | null>(null);
+  const containerRef = useRef<HTMLDivElement | HTMLAnchorElement>(null);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -27,20 +26,9 @@ export default function MagneticButton({
   const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.1 });
   const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.1 });
 
-  const handleMouseEnter = () => {
-    if (ref.current) {
-      rectRef.current = ref.current.getBoundingClientRect();
-    }
-  };
-
   const handleMouseMove = (e: React.MouseEvent) => {
-    let rect = rectRef.current;
-    if (!rect && ref.current) {
-      rect = ref.current.getBoundingClientRect();
-      rectRef.current = rect;
-    }
-    if (!rect) return;
-
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
 
@@ -49,32 +37,43 @@ export default function MagneticButton({
   };
 
   const handleMouseLeave = () => {
-    rectRef.current = null;
     x.set(0);
     y.set(0);
   };
 
-  const content = (
-    <motion.div
-      ref={ref}
-      className={`relative inline-flex items-center justify-center cursor-pointer ${className}`}
+  const innerContent = (
+    <motion.span
+      className="inline-flex items-center justify-center w-full h-full pointer-events-none"
       style={{ x: springX, y: springY }}
-      onMouseEnter={handleMouseEnter}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onClick={onClick}
     >
-      {children}
-    </motion.div>
+      <span className="pointer-events-auto contents">{children}</span>
+    </motion.span>
   );
 
   if (href) {
     return (
-      <a href={href} className={className || undefined}>
-        {content}
+      <a
+        ref={containerRef as React.Ref<HTMLAnchorElement>}
+        href={href}
+        className={`relative inline-flex items-center justify-center cursor-pointer ${className}`.trim()}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onClick={onClick}
+      >
+        {innerContent}
       </a>
     );
   }
 
-  return content;
+  return (
+    <div
+      ref={containerRef as React.Ref<HTMLDivElement>}
+      className={`relative inline-flex items-center justify-center cursor-pointer ${className}`.trim()}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+    >
+      {innerContent}
+    </div>
+  );
 }

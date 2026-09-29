@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, Suspense } from "react";
-import { Canvas, extend, useFrame, type ThreeElement, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, extend, useFrame, type ThreeEvent } from "@react-three/fiber";
 import { useGLTF, useTexture, Environment, Lightformer } from "@react-three/drei";
 import {
   BallCollider,
@@ -293,15 +293,15 @@ function Band({
   const texture = getLanyardTexture();
 
   const cardMap = useMemo(() => {
-    const baseMap = materials.base.map as THREE.Texture;
-    const baseImg = baseMap.image as (CanvasImageSource & { width?: number; height?: number }) | undefined;
+    const baseMap = materials?.base?.map as THREE.Texture | undefined;
+    const baseImg = baseMap?.image as (CanvasImageSource & { width?: number; height?: number }) | undefined;
     const W = baseImg?.width || 1024;
     const H = baseImg?.height || 1024;
     const canvas = document.createElement("canvas");
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return baseMap;
+    if (!ctx || !baseMap) return baseMap || null;
 
     // 1. Fill entire base with clean background - REMOVING ALL PREVIOUS LOGOS AND WATERMARKS
     ctx.fillStyle = "#FFFFFF";
@@ -423,11 +423,17 @@ function Band({
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
             onPointerUp={(e: ThreeEvent<PointerEvent>) => {
-              (e.target as Element).releasePointerCapture(e.pointerId);
+              const domTarget = e.nativeEvent?.target as HTMLElement | null;
+              try {
+                domTarget?.releasePointerCapture?.(e.pointerId);
+              } catch {}
               drag(false);
             }}
             onPointerDown={(e: ThreeEvent<PointerEvent>) => {
-              (e.target as Element).setPointerCapture(e.pointerId);
+              const domTarget = e.nativeEvent?.target as HTMLElement | null;
+              try {
+                domTarget?.setPointerCapture?.(e.pointerId);
+              } catch {}
               drag(new THREE.Vector3().copy(e.point).sub(vec.copy(card.current.translation())));
             }}
           >
