@@ -24,7 +24,6 @@ export const navLinks = [
 
 // ─── Stats ─────────────────────────────────────────────────────
 export const stats = [
-  { value: "3.88", label: "IPK / GPA (S1 Informatika)" },
   { value: "500K+", label: "Social Media Reach" },
   { value: "30+", label: "UI/UX App Screens" },
   { value: "10+", label: "Teknologi & Tools" },
